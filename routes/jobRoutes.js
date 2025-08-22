@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Job } = require('../models');
 const CompanyProfile = require('../models/CompanyProfile');
-const { searchJobsByQuery } = require('../controllers/jobSearchService');
+const { searchJobsByQuery,searchByLocation } = require('../controllers/jobSearchService');
 
 
 const CATEGORIES_TAGS = {
@@ -247,5 +247,5 @@ router.delete('/jobs/:jobId', async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-
+router.get("/location", searchByLocation);
 module.exports = router;
