@@ -1,29 +1,27 @@
 const { sequelize } = require('../config/database');
+const { DataTypes } = require('sequelize');
+
+// Import models
 const User = require('./User');
 const CompanyProfile = require('./CompanyProfile');
 const JobSeekerProfile = require('./JobSeekerProfile');
 const Job = require('./Job');
-const { DataTypes } = require('sequelize');
 const Bookmark = require('./Bookmark')(sequelize, DataTypes);
 const AdminLog = require('./AdminLog');
 const JobApplication = require('./JobApplication')(sequelize);
 const UserEducation = require('./UserEducation');
 const UserExperience = require('./UserExperience');
-const Notification = require("./Notification")(sequelize, DataTypes); // <-- add this
+const Notification = require("./Notification")(sequelize, DataTypes);
+const CompanyVerification = require('./CompanyVerification')(sequelize, DataTypes);
+const CompanyReview = require('./CompanyReview')(sequelize, DataTypes);
+const Report = require('./Report')(sequelize, DataTypes);
+const ReportCounter = require('./ReportCounter')(sequelize, DataTypes);
 
 // associations
 User.hasMany(Notification, { foreignKey: "user_id", as: "notifications" });
 Notification.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
 
-// JobApplication associations
-Job.hasMany(JobApplication, { foreignKey: 'job_id', as: 'applications' });
-JobApplication.belongsTo(Job, { foreignKey: 'job_id', as: 'job' });
-
-User.hasMany(JobApplication, { foreignKey: 'job_seeker_id', as: 'jobApplications' });
-JobApplication.belongsTo(User, { foreignKey: 'job_seeker_id', as: 'jobSeeker' });
-
- 
 // Define associations
 // User to CompanyProfile (One-to-One)
 User.hasOne(CompanyProfile, {
@@ -36,6 +34,19 @@ User.hasOne(CompanyProfile, {
 CompanyProfile.belongsTo(User, {
   foreignKey: 'userId',
   as: 'user'
+});
+
+// CompanyProfile to Job (One-to-Many)
+CompanyProfile.hasMany(Job, {
+  foreignKey: 'company_id',
+  sourceKey: 'userId',
+  as: 'jobs'
+});
+
+Job.belongsTo(CompanyProfile, {
+  foreignKey: 'company_id',
+  targetKey: 'userId',
+  as: 'company'
 });
 
 // User to JobSeekerProfile (One-to-One)
@@ -83,12 +94,6 @@ AdminLog.belongsTo(User, {
   foreignKey: 'adminId',
   as: 'admin'
 });
-// Bookmark belongs to Job
-Bookmark.belongsTo(Job, {
-  foreignKey: 'job_id',
-  as: 'job'
-});
-
 // Job includes CompanyProfile via User → This is optional chaining later
 Job.belongsTo(User, {
   foreignKey: 'company_id',
@@ -105,6 +110,60 @@ UserExperience.belongsTo(User, {
   as: 'user',
 });
 
+// Job to Bookmark (One-to-Many)
+Job.hasMany(Bookmark, {
+  foreignKey: 'job_id',
+  as: 'bookmarks',
+  onDelete: 'CASCADE'
+});
+
+Bookmark.belongsTo(Job, {
+  foreignKey: 'job_id',
+  as: 'job'
+});
+
+// CompanyReview associations
+User.hasMany(CompanyReview, {
+  foreignKey: 'reviewer_id',
+  as: 'reviews',
+  onDelete: 'CASCADE'
+});
+
+CompanyReview.belongsTo(User, {
+  foreignKey: 'reviewer_id',
+  as: 'reviewer'
+});
+
+CompanyProfile.hasMany(CompanyReview, {
+  foreignKey: 'company_id',
+  as: 'reviews',
+  onDelete: 'CASCADE'
+});
+
+CompanyReview.belongsTo(CompanyProfile, {
+  foreignKey: 'company_id',
+  as: 'company'
+});
+
+// Report associations
+User.hasMany(Report, {
+  foreignKey: 'reporter_id',
+  as: 'reports',
+  onDelete: 'CASCADE'
+});
+
+Report.belongsTo(User, {
+  foreignKey: 'reporter_id',
+  as: 'reporter'
+});
+
+
+// Set up associations after all models are defined
+Object.values(sequelize.models).forEach(model => {
+  if (model.associate) {
+    model.associate(sequelize.models);
+  }
+});
 
 module.exports = {
   sequelize,
@@ -117,6 +176,10 @@ module.exports = {
   JobApplication,
   UserEducation,
   UserExperience,
-    Notification,
+  Notification,
+  CompanyVerification,
+  CompanyReview,
+  Report,
+  ReportCounter
 };
 

@@ -1,6 +1,9 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 const { sequelize } = require('../config/database');
 const bcrypt = require('bcryptjs');
+
+// Import models after they're defined to avoid circular dependencies
+let CompanyVerification;
 
 // Define the User model
 const User = sequelize.define('User', {
@@ -84,6 +87,29 @@ const User = sequelize.define('User', {
   },
 });
 
+// Set up associations after all models are loaded
+User.associate = function(models) {
+  CompanyVerification = models.CompanyVerification;
+  
+  User.hasMany(CompanyVerification, {
+    foreignKey: 'companyId',
+    as: 'verifications',
+    onDelete: 'CASCADE'
+  });
+
+  User.hasMany(CompanyVerification, {
+    foreignKey: 'verifiedBy',
+    as: 'verificationsApproved',
+    onDelete: 'SET NULL'
+  });
+
+  User.hasMany(CompanyVerification, {
+    foreignKey: 'rejectedBy',
+    as: 'verificationsRejected',
+    onDelete: 'SET NULL'
+  });
+};
+
 /**
  * Instance method to validate a password
  * @param {string} password - The password to validate
@@ -92,11 +118,23 @@ const User = sequelize.define('User', {
 User.prototype.validPassword = async function(password) {
   if (!password || !this.password_hash) {
     console.error('Password or hash is missing');
+    console.log('Password exists:', !!password);
+    console.log('Hash exists:', !!this.password_hash);
     return false;
   }
   
   try {
-    return await bcrypt.compare(password, this.password_hash);
+    console.log('Password being checked:', password);
+    console.log('Stored hash:', this.password_hash);
+    const isMatch = await bcrypt.compare(password, this.password_hash);
+    console.log('Password match result:', isMatch);
+    
+    // Debug: Check hash generation
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(password, salt);
+    console.log('New hash of provided password:', newHash);
+    
+    return isMatch;
   } catch (error) {
     console.error('Error validating password:', error);
     return false;

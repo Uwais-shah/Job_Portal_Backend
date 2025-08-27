@@ -56,7 +56,7 @@ exports.getMyApplications = async (req, res) => {
     const job_seeker_id = req.user.id;
     const applications = await JobApplication.findAll({
       where: { job_seeker_id },
-      include: [{ model: Job, as: 'job' }]
+      include: [{ model: Job, as: 'appliedJob' }]
     });
     res.json({ success: true, applications });
   } catch (err) {
@@ -72,7 +72,7 @@ exports.getCompanyCandidates = async (req, res) => {
       include: [
         {
           model: Job,
-          as: 'job',
+          as: 'appliedJob',
           where: { company_id },    // filter by company id
           attributes: ['id', 'title']
         },

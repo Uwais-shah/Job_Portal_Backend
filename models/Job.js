@@ -70,12 +70,7 @@ tags: {
   timestamps: false
 });
 
-Job.associate = (models) => {
-  Job.hasMany(models.Bookmark, {
-    foreignKey: 'job_id',
-    as: 'bookmarks'
-  });
-};
+// Associations are defined in models/index.js
 
 
 module.exports = Job;

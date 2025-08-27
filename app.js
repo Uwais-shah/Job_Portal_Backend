@@ -21,7 +21,7 @@ const { sequelize } = require('./models');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const suggestRoutes = require('./routes/suggest');
-const jobSearchRoutes = require('./routes/jobRoutes'); 
+const jobRoutes = require('./routes/jobRoutes'); 
 const applicationRoutes = require('./routes/application');
 const profileRoutes = require('./routes/profile');
 const bookmarkRoutes = require('./routes/bookmark');
@@ -30,32 +30,83 @@ const companyRoutes = require('./routes/companyRoutes');
 const jobseekerRoutes = require('./routes/jobseeker.routes');
 const emailRoutes = require("./routes/emailRoutes");
 const notificationsRouter = require('./routes/notificationRoutes');
+const companyReviewRoutes = require('./routes/companyReviewRoutes');
 // Create Express app
 const app = express();
 
-// Middleware
-app.use(cors({
+// CORS Configuration
+const allowedOrigins = [
+  'http://localhost:9000',
+  'http://localhost:9000/',
+  'http://127.0.0.1:9000',
+  'http://127.0.0.1:9000/'
+];
 
-}))
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      console.error(msg);
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Accept',
+    'X-XSRF-TOKEN',
+    'X-CSRF-TOKEN'
+  ],
+  exposedHeaders: [
+    'Content-Length',
+    'X-Foo',
+    'X-Bar',
+    'Set-Cookie'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 app.use(helmet());
 app.use(express.json());
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API Routes
+// API Routes - Order matters! More specific routes should come before more general ones
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', suggestRoutes);
-app.use('/api/jobs', jobSearchRoutes);
+app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/admin', require('./routes/admin'));
-app.use('/api/password', passwordRoutes); 
-app.use('/api', companyRoutes);
-app.use('/api/jobseeker', jobseekerRoutes);
+app.use('/api/password', passwordRoutes);
 app.use("/api/emails", emailRoutes);
-app.use('/api/notifications', notificationsRouter); 
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/admin/companies', require('./routes/companyVerification'));
+
+// Company routes - specific routes before general ones
+app.use('/api/company', companyRoutes);
+app.use('/api/company/:companyId', companyReviewRoutes);
+
+app.use('/api/jobseeker', jobseekerRoutes);
+
+// Test route
+app.get('/test', (req, res) => {
+  res.json({ status: 'ok', message: 'Test route is working' });
+}); 
 // Health check endpoint
 app.get('/', (_, res) => res.status(200).json({ status: 'ok', message: 'Job Portal API is running' }));
 

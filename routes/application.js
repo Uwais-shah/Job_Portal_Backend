@@ -85,8 +85,8 @@ router.put('/:applicationId/status', async (req, res) => {
 
     const application = await JobApplication.findByPk(id, {
       include: [
-        { model: Job, as: 'job' },
-        { model: User, as: 'jobSeeker' }
+        { model: Job, as: 'appliedJob' },
+        { model: User, as: 'applicant' }
       ]
     });
 

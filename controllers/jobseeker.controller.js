@@ -1,6 +1,6 @@
-import { sequelize } from '../models/index.js';
-import { Op, fn, col, literal } from 'sequelize';
-import { User, UserExperience, JobSeekerProfile, CompanyProfile } from '../models/index.js';
+const { sequelize } = require('../models');
+const { Op, fn, col, literal } = require('sequelize');
+const { User, UserExperience, JobSeekerProfile, CompanyProfile } = require('../models');
 
 // Helper: calculate total experience in years
 const experienceYearsLiteral = sequelize.fn(
@@ -8,7 +8,7 @@ const experienceYearsLiteral = sequelize.fn(
   sequelize.literal("TIMESTAMPDIFF(MONTH, `jobSeekerProfile->experience`.`start_date`, IFNULL(`jobSeekerProfile->experience`.`end_date`, CURDATE())) / 12")
 );
 
-export const getSuggestions = async (req, res) => {
+const getSuggestions = async (req, res) => {
   try {
     const { companyId } = req.params;
 
@@ -113,7 +113,7 @@ export const getSuggestions = async (req, res) => {
   }
 };
 
-export const searchJobseekers = async (req, res) => {
+const searchJobseekers = async (req, res) => {
   const { position } = req.query;
   if (!position) return res.status(400).json({ error: 'Position is required' });
 
@@ -193,3 +193,4 @@ export const searchJobseekers = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+module.exports = { getSuggestions, searchJobseekers };

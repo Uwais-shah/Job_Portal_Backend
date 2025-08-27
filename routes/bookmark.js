@@ -76,7 +76,7 @@ router.get('/:userId', async (req, res) => {
       include: [
         {
           model: Job,
-          as: 'job', // make sure alias matches your association
+          as: 'bookmarkedJob',
           include: [{ model: CompanyProfile, as: 'company' }]
         }
       ]

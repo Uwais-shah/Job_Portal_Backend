@@ -20,11 +20,10 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false
   });
 
-  // 👇 Add this:
   Bookmark.associate = (models) => {
     Bookmark.belongsTo(models.Job, {
       foreignKey: 'job_id',
-      as: 'job'
+      as: 'bookmarkedJob'  // Changed from 'job' to 'bookmarkedJob' to avoid conflict
     });
   };
 

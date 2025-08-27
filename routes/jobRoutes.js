@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { Job } = require('../models');
-const CompanyProfile = require('../models/CompanyProfile');
-const { searchJobsByQuery,searchByLocation } = require('../controllers/jobSearchService');
+const db = require('../models');
+const Job = db.Job;
+const CompanyProfile = db.CompanyProfile;
+const { searchJobsByQuery, searchByLocation } = require('../controllers/jobSearchService');
+
+// Model association is defined in the model file
 
 
 const CATEGORIES_TAGS = {
@@ -69,7 +72,8 @@ function assignCategory(tags) {
   return maxMatches > 0 ? bestCategory : null;
 }
 
-router.post('/jobs', async (req, res) => {
+// Create a new job
+router.post('/', async (req, res) => {
   const {
   title, description, location, type, salary,
   deadline, skills, status, company_id, tags,
@@ -106,7 +110,9 @@ router.post('/jobs', async (req, res) => {
 });
 
 
-// GET /search?q=developer → Search jobs
+// Model association is defined in the model file
+
+// Search jobs by query
 router.get('/search', async (req, res) => {
   const query = req.query.q || '';
   try {
@@ -117,18 +123,13 @@ router.get('/search', async (req, res) => {
     res.status(500).json({ success: false, message: 'Search failed.' });
   }
 });
-Job.belongsTo(CompanyProfile, {
-  foreignKey: 'company_id',
-  targetKey: 'userId',
-  as: 'company'
-});
 
-router.get('/jobs/:id', async (req, res) => {
+// Get job by ID
+router.get('/:id', async (req, res) => {
   const jobId = req.params.id;
 
   try {
-    const job = await Job.findOne({
-      where: { id: jobId },
+    const job = await Job.findByPk(jobId, {
       include: [{
         model: CompanyProfile,
         as: 'company',
@@ -179,7 +180,8 @@ router.get('/jobs/:id', async (req, res) => {
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
-router.get('/jobs/company/:companyId', async (req, res) => {
+// Get jobs by company
+router.get('/company/:companyId', async (req, res) => {
   const { companyId } = req.params;
 
   try {
@@ -199,8 +201,8 @@ router.get('/jobs/company/:companyId', async (req, res) => {
   }
 });
 
-// ------------------ Edit Job by ID ------------------
-router.put('/jobs/:jobId', async (req, res) => {
+// Update job by ID
+router.put('/:jobId', async (req, res) => {
   const { jobId } = req.params;
   const {
     title, description, location, type, salary,
@@ -235,7 +237,8 @@ router.put('/jobs/:jobId', async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-router.delete('/jobs/:jobId', async (req, res) => {
+// Delete job by ID
+router.delete('/:jobId', async (req, res) => {
   const { jobId } = req.params;
   try {
     const job = await Job.findByPk(jobId);
@@ -247,5 +250,7 @@ router.delete('/jobs/:jobId', async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-router.get("/location", searchByLocation);
+// Search jobs by location
+router.get("/location/search", searchByLocation);
+
 module.exports = router;
