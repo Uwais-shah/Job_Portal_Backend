@@ -62,11 +62,12 @@ exports.getCompanyReviews = async (req, res) => {
   try {
     const companyId = req.params.companyId; // Get companyId from URL params
     
-    const [reviews] = await sequelize.query(`
+    const reviews = await sequelize.query(`
       SELECT 
         cr.*,
         u.id as 'reviewer.id',
-        u.name as 'reviewer.name'
+        u.name as 'reviewer.name',
+        u.email as 'reviewer.email'
       FROM company_reviews cr
       LEFT JOIN users u ON cr.reviewer_id = u.id
       WHERE cr.company_id = ? AND cr.visible = 1
@@ -78,12 +79,10 @@ exports.getCompanyReviews = async (req, res) => {
       nest: true
     });
     
-    const formattedReviews = Array.isArray(reviews) ? reviews : [reviews];
-
     res.json({
       success: true,
-      count: formattedReviews.length,
-      data: formattedReviews
+      count: reviews.length,
+      data: reviews
     });
   } catch (error) {
     console.error('Error fetching company reviews:', error);

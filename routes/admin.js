@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken');
 const jwtConfig = require('../config/jwt');
 const crypto = require('crypto');
 const { getDashboardStats } = require('../controllers/admin/dashboardController');
+const { getReportedJobSeekers } = require('../controllers/admin/jobSeekerReportsController');
+const { getReportedCompanies } = require('../controllers/admin/companyReportsController');
 
 /**
  * @swagger
@@ -422,5 +424,67 @@ router.get('/dashboard', (req, res) => {
  *         description: Internal server error
  */
 router.get('/stats', isLoggedIn, isAdmin, getDashboardStats);
+
+/**
+ * @swagger
+ * /api/admin/job_seekers/reports:
+ *   get:
+ *     summary: Get job seekers with 3 or more reports
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of job seekers with 3+ reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ReportedJobSeeker'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/job_seekers/reports', isLoggedIn, isAdmin, getReportedJobSeekers);
+
+/**
+ * @swagger
+ * /api/admin/companies/reports:
+ *   get:
+ *     summary: Get companies with 3 or more reports
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of companies with 3+ reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ReportedCompany'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/companies/reports', isLoggedIn, isAdmin, getReportedCompanies);
 
 module.exports = router;

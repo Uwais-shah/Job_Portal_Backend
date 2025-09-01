@@ -98,14 +98,8 @@ User.associate = function(models) {
   });
 
   User.hasMany(CompanyVerification, {
-    foreignKey: 'verifiedBy',
-    as: 'verificationsApproved',
-    onDelete: 'SET NULL'
-  });
-
-  User.hasMany(CompanyVerification, {
-    foreignKey: 'rejectedBy',
-    as: 'verificationsRejected',
+    foreignKey: 'verifiedById',
+    as: 'verificationActions',
     onDelete: 'SET NULL'
   });
 };
